@@ -1,8 +1,12 @@
+{% load static %}
+<link rel="stylesheet" type="text/css" href="{% static 'css/bootstrap.css' %}">
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
     <title>File Upload</title>
     <style>
         h1 {
@@ -11,32 +15,39 @@
             color: #777777;
             text-align: center;
         }
-        table {
-            margin: auto;
-        }
     </style>
 </head>
+
 <body>
+  <div class="container my-3">
     <h1>
         {{what}}
     </h1>
-    <table>
+    <table class="table">
       <tr>
         <td>
           <form action="/app/upload/" method="POST" enctype="multipart/form-data">
             {% csrf_token %}
             <input type="file" name="files" multiple>
-            <br/>
             <input type="submit" value="Upload File">
-            <br/>
           </form>
-
+        </td>
+      </tr>
+      <tr>
+        <td>
           <form action="/app/train/" method="POST">
             {% csrf_token %}
             <input type="submit" value="Train">
           </form>
         </td>
+        <td>
+          <form action="/app/predict/" method="POST">
+            {% csrf_token %}
+            <input type="submit" value="Predict">
+          </form>
+        </td>
       </tr>
     </table>
+  </div>
 </body>
 </html>
