@@ -12,34 +12,6 @@
     <title>Classifier</title>
 </head>
 <body>
-    <!--
-    <nav class="navbar navbar-expand-lg navbar-light bg-light border-bottom" id="topMenu">
-        <a class="navbar-brand" href="{% url 'app:index' %}">Classifier</a>
-        <div class="collapse navbar-collapse flex-grow-0" id="navbarNav">
-            <ul class="navbar-nav">
-                <li class="nav-item">
-                    <a class="nav-link" href="{% url 'app:index' %}">
-                        홈
-                    </a>
-                </li>
-                <li class="navbar-item">
-                    <a class="nav-link" href="{% url 'app:upload' %}">
-                        업로드
-                    </a>
-                </li>
-                <li class="navbar-item">
-                    <a class="nav-link" href="{% url 'app:train' %}">
-                        트레인
-                    </a>
-                </li>
-                <li class="navbar-item">
-                    <a class="nav-link" href="{% url 'app:predict' %}">
-                        프레딕트
-                    </a>
-                </li>
-            </ul>
-        </div>
-    </nav>-->
     {% include "navbar.html" %}
     {% block content %}
     {% endblock %}

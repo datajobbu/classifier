@@ -2,12 +2,13 @@ import os
 
 from django.http import HttpResponse
 from django.shortcuts import render, get_object_or_404
+from django.views.decorators.csrf import csrf_protect
 
 
 def index(request):
     """ render main page """
     context = {'what': 'Django File Upload'}
-    return render(request, 'index.html', context)
+    return render(request, 'app/index.html', context)
 
 
 def _handle_uploaded_file(file, filename):
@@ -20,6 +21,7 @@ def _handle_uploaded_file(file, filename):
             destination.write(chunk)
 
 
+@csrf_protect
 def upload(request):
     """ file upload to /data/ """
     if request.method == 'POST':
@@ -28,7 +30,7 @@ def upload(request):
             _handle_uploaded_file(afile, str(afile))
         
         context = {'what': 'Upload Successed. Ready to train.'}
-        return render(request, 'index.html', context)
+        return render(request, 'app/index.html', context)
 
     return HttpResponse("Failed")
 
@@ -54,7 +56,6 @@ def train(request):
 
     filenames = os.listdir("./data/")
     print("file num => ", len(filenames))
-    print("filenames =>", filenames)
     print("-"*50)
     categories = []
     for filename in filenames:   
@@ -63,7 +64,6 @@ def train(request):
             categories.append(1)
         else:
             categories.append(0)
-    print("categories => ", categories)
 
     df = pd.DataFrame({
         'filename': filenames,
@@ -116,7 +116,7 @@ def train(request):
 
     total_train = train_df.shape[0]
     total_validate = validate_df.shape[0]
-    batch_size=3
+    batch_size=15
 
     train_datagen = ImageDataGenerator(
         rotation_range=15,
@@ -161,7 +161,9 @@ def train(request):
     )
     print("### MODEL SAVE ###")
     model.save_weights("./model/cnn_model.h5")
-    return HttpResponse("Train Finished")
+    
+    context = {"what": "Train Finished! Ready To Predict."}
+    return render(request, 'app/index.html', context)
 
 
 def predict(request):
