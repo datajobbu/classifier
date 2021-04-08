@@ -5,12 +5,13 @@ from django.shortcuts import render, get_object_or_404
 
 
 def index(request):
-    """render main page"""
-    return render(request, 'index.html', {'what':'Django File Upload'})
+    """ render main page """
+    context = {'what': 'Django File Upload'}
+    return render(request, 'index.html', context)
 
 
 def _handle_uploaded_file(file, filename):
-    """ help file uploading"""
+    """ help file uploading """
     if not os.path.exists('data/'):
         os.mkdir('data/')
 
@@ -20,22 +21,29 @@ def _handle_uploaded_file(file, filename):
 
 
 def upload(request):
-    """file upload to /data/"""
+    """ file upload to /data/ """
     if request.method == 'POST':
         files = request.FILES.getlist('files')
         for afile in files:
             _handle_uploaded_file(afile, str(afile))
         
-        return HttpResponse("Success")
+        context = {'what': 'Upload Successed. Ready to train.'}
+        return render(request, 'index.html', context)
 
     return HttpResponse("Failed")
 
 
 def train(request):
     """ 일단 날코딩으로 짜고 후에 코드 분리 및 비동기로 """
+    import PIL
+    import numpy as np
+    import pandas as pd
+
     from keras.models import Sequential
     from keras.layers import Conv2D, MaxPooling2D, Dropout, Flatten, Dense, Activation, BatchNormalization
     from keras.callbacks import EarlyStopping, ReduceLROnPlateau
+    from keras.preprocessing.image import ImageDataGenerator
+    from sklearn.model_selection import train_test_split
 
 
     FAST_RUN = False
@@ -44,7 +52,10 @@ def train(request):
     IMAGE_SIZE=(IMAGE_WIDTH, IMAGE_HEIGHT)
     IMAGE_CHANNELS=3
 
-    filenames = os.listdir("../data/")
+    filenames = os.listdir("./data/")
+    print("file num => ", len(filenames))
+    print("filenames =>", filenames)
+    print("-"*50)
     categories = []
     for filename in filenames:   
         category = filename.split('.')[0]
@@ -52,6 +63,7 @@ def train(request):
             categories.append(1)
         else:
             categories.append(0)
+    print("categories => ", categories)
 
     df = pd.DataFrame({
         'filename': filenames,
@@ -85,6 +97,7 @@ def train(request):
 
     model.summary() #log?
 
+    print("### MODEL READY ###")
     earlystop = EarlyStopping(patience=10)
 
     learning_rate_reduction = ReduceLROnPlateau(monitor='val_acc', 
@@ -96,14 +109,14 @@ def train(request):
     callbacks = [earlystop, learning_rate_reduction]
 
     df["category"] = df["category"].replace({0: 'cat', 1: 'dog'})
-
+    print("### TRAIN TEST SPLIT ###")
     train_df, validate_df = train_test_split(df, test_size=0.20, random_state=42)
     train_df = train_df.reset_index(drop=True)
     validate_df = validate_df.reset_index(drop=True)
 
     total_train = train_df.shape[0]
     total_validate = validate_df.shape[0]
-    batch_size=15
+    batch_size=3
 
     train_datagen = ImageDataGenerator(
         rotation_range=15,
@@ -117,7 +130,7 @@ def train(request):
 
     train_generator = train_datagen.flow_from_dataframe(
         train_df,
-        "../data/",
+        "./data/",
         x_col='filename',
         y_col='category',
         target_size=IMAGE_SIZE,
@@ -127,19 +140,18 @@ def train(request):
 
     validation_datagen = ImageDataGenerator(rescale=1./255)
 
-
     validation_generator = validation_datagen.flow_from_dataframe(
         validate_df, 
-        "../data/", 
+        "./data/", 
         x_col='filename',
         y_col='category',
         target_size=IMAGE_SIZE,
         class_mode='categorical',
         batch_size=batch_size
     )
-
-    epochs=3 if FAST_RUN else 3
-    history = model.fit_generator(
+    print("### MODEL TRAIN ###")
+    epochs=3 if FAST_RUN else 5
+    history = model.fit(
         train_generator,
         epochs=epochs,
         validation_data=validation_generator,
@@ -147,6 +159,11 @@ def train(request):
         steps_per_epoch=total_train//batch_size,
         callbacks=callbacks
     )
-
+    print("### MODEL SAVE ###")
     model.save_weights("./model/cnn_model.h5")
     return HttpResponse("Train Finished")
+
+
+def predict(request):
+    """TODO"""
+    pass
