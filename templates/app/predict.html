@@ -1,0 +1,29 @@
+{% extends 'base.html' %}
+{% block content %}
+{% load static %}
+<div class="container my-3">
+  <h1>
+    {{ content }}
+  </h1>
+  <table class="table">
+    <tr>
+        <td>
+            <p>P(cat): {{ prob_cat }}</p>
+            <p>P(dog): {{ prob_dog }}</p>
+        </td>
+        <td>
+            <img src="{% static 'img/test/test.jpg' %}">
+        </td>
+    </tr>
+    <tr>
+      <td>
+        <form action="/app/predict_view/predict/" method="POST" enctype="multipart/form-data">
+          {% csrf_token %}
+          <input type="file" name="test">
+          <input type="submit" value="Predict">
+        </form>
+      </td>
+    </tr>
+  </table>
+</div>
+{% endblock %}

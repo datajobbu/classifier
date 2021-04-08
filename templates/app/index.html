@@ -7,27 +7,17 @@
   <table class="table">
     <tr>
       <td>
-        <form action="/app/upload/" method="POST" enctype="multipart/form-data">
-          {% csrf_token %}
-          <input type="file" name="files" multiple>
-          <input type="submit" value="Upload File">
-        </form>
+        <p>list</p>
       </td>
     </tr>
     <tr>
       <td>
-        <form action="/app/train/" method="POST">
-          {% csrf_token %}
-          <input type="submit" value="Train">
-        </form>
+        <p>train</p>
       </td>
+    </tr>
     <tr>
       <td>
-        <form action="/app/predict/" method="POST" enctype="multipart/form-data">
-          {% csrf_token %}
-          <input type="file" name="test">
-          <input type="submit" value="Predict">
-        </form>
+        <p>predict</p>
       </td>
     </tr>
   </table>

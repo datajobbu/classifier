@@ -1,0 +1,27 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container my-3">
+  <h1>
+    {{ what }}
+  </h1>
+  <table class="table">
+    <tr>
+      <td>
+        <form action="{{ request.build_absolute_uri }}upload/" method="POST" enctype="multipart/form-data">
+          {% csrf_token %}
+          <input type="file" name="files" multiple>
+          <input type="submit" value="Upload File">
+        </form>
+      </td>
+    </tr>
+    <tr>
+      <td>
+        <form action="{{ request.build_absolute_uri }}train/" method="POST">
+          {% csrf_token %}
+          <input type="submit" value="Train">
+        </form>
+      </td>
+    </tr>
+  </table>
+</div>
+{% endblock %}

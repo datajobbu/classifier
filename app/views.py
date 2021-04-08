@@ -4,6 +4,8 @@ from django.http import HttpResponse
 from django.shortcuts import render, get_object_or_404
 from django.views.decorators.csrf import csrf_protect
 
+from model.cnn import cnn_model
+
 
 def index(request):
     """ render main page """
@@ -11,26 +13,38 @@ def index(request):
     return render(request, 'app/index.html', context)
 
 
+def train_view(request):
+    """ render train page """
+    context = {'what': 'Upload Images And Train Model'}
+    return render(request, 'app/train.html', context)
+
+
+def predict_view(request):
+    """ render predict page """
+    context = {'content': 'Upload A Test Image And Predict'}
+    return render(request, 'app/predict.html', context)
+
+
 def _handle_uploaded_file(file, filename):
     """ help file uploading """
-    if not os.path.exists('data/'):
-        os.mkdir('data/')
+    if not os.path.exists('static/img/data/'):
+        os.mkdir('static/img/data/')
 
-    with open('data/' + filename, 'wb+') as destination:
+    with open('static/img/data/' + filename, 'wb+') as destination:
         for chunk in file.chunks():
             destination.write(chunk)
 
 
 @csrf_protect
 def upload(request):
-    """ file upload to /data/ """
+    """ file upload to static/img/data/ """
     if request.method == 'POST':
         files = request.FILES.getlist('files')
         for afile in files:
             _handle_uploaded_file(afile, str(afile))
         
         context = {'what': 'Upload Successed. Ready to train.'}
-        return render(request, 'app/index.html', context)
+        return render(request, 'app/train.html', context)
 
     return HttpResponse("Failed")
 
@@ -41,8 +55,6 @@ def train(request):
     import numpy as np
     import pandas as pd
 
-    from keras.models import Sequential
-    from keras.layers import Conv2D, MaxPooling2D, Dropout, Flatten, Dense, Activation, BatchNormalization
     from keras.callbacks import EarlyStopping, ReduceLROnPlateau
     from keras.preprocessing.image import ImageDataGenerator
     from sklearn.model_selection import train_test_split
@@ -54,7 +66,7 @@ def train(request):
     IMAGE_SIZE = (IMAGE_WIDTH, IMAGE_HEIGHT)
     IMAGE_CHANNELS = 3
 
-    filenames = os.listdir("./data/")
+    filenames = os.listdir("./static/img/data/")
     print("file num => ", len(filenames))
     print("-"*50)
     categories = []
@@ -71,31 +83,7 @@ def train(request):
         'category': categories
     })
 
-    model = Sequential()
-    model.add(Conv2D(32, (3, 3), activation='relu', input_shape=(IMAGE_WIDTH, IMAGE_HEIGHT, IMAGE_CHANNELS)))
-
-    model.add(BatchNormalization())
-    model.add(MaxPooling2D(pool_size=(2, 2)))
-    model.add(Dropout(0.25))
-
-    model.add(Conv2D(64, (3, 3), activation='relu'))
-    model.add(BatchNormalization())
-    model.add(MaxPooling2D(pool_size=(2, 2)))
-    model.add(Dropout(0.25))
-
-    model.add(Conv2D(128, (3, 3), activation='relu'))
-    model.add(BatchNormalization())
-    model.add(MaxPooling2D(pool_size=(2, 2)))
-    model.add(Dropout(0.25))
-
-    model.add(Flatten()) 
-
-    model.add(Dense(512, activation='relu'))
-    model.add(BatchNormalization())
-    model.add(Dropout(0.5))
-    model.add(Dense(2, activation='softmax'))
-    model.compile(loss='categorical_crossentropy', optimizer='rmsprop', metrics=['accuracy']) 
-
+    model = cnn_model()
     model.summary() #log?
 
     print("### MODEL READY ###")
@@ -132,7 +120,7 @@ def train(request):
 
     train_generator = train_datagen.flow_from_dataframe(
         train_df,
-        "./data/",
+        "./static/img/data/",
         x_col='filename',
         y_col='category',
         target_size=IMAGE_SIZE,
@@ -144,7 +132,7 @@ def train(request):
 
     validation_generator = validation_datagen.flow_from_dataframe(
         validate_df, 
-        "./data/", 
+        "./static/img/data/", 
         x_col='filename',
         y_col='category',
         target_size=IMAGE_SIZE,
@@ -164,10 +152,10 @@ def train(request):
     )
 
     print("### MODEL SAVE ###")
-    model.save_weights("./model/cnn_model.h5")
+    model.save_weights("model/cnn_model.h5")
     
     context = {"what": "Train Finished! Ready To Predict."}
-    return render(request, 'app/index.html', context)
+    return render(request, 'app/predict.html', context)
 
 
 def predict(request):
@@ -175,47 +163,21 @@ def predict(request):
 
     from keras.preprocessing import image
     from keras.models import load_model
-    from keras.models import Sequential
-    from keras.layers import Conv2D, MaxPooling2D, Dropout, Flatten, Dense, Activation, BatchNormalization
 
 
-    IMAGE_WIDTH = 128
-    IMAGE_HEIGHT = 128
-    IMAGE_SIZE = (IMAGE_WIDTH, IMAGE_HEIGHT)
-    IMAGE_CHANNELS = 3
-
-    model = Sequential()
-    model.add(Conv2D(32, (3, 3), activation='relu', input_shape=(IMAGE_WIDTH, IMAGE_HEIGHT, IMAGE_CHANNELS)))
-
-    model.add(BatchNormalization())
-    model.add(MaxPooling2D(pool_size=(2, 2)))
-    model.add(Dropout(0.25))
-
-    model.add(Conv2D(64, (3, 3), activation='relu'))
-    model.add(BatchNormalization())
-    model.add(MaxPooling2D(pool_size=(2, 2)))
-    model.add(Dropout(0.25))
-
-    model.add(Conv2D(128, (3, 3), activation='relu'))
-    model.add(BatchNormalization())
-    model.add(MaxPooling2D(pool_size=(2, 2)))
-    model.add(Dropout(0.25))
-
-    model.add(Flatten()) 
-
-    model.add(Dense(512, activation='relu'))
-    model.add(BatchNormalization())
-    model.add(Dropout(0.5))
-    model.add(Dense(2, activation='softmax'))
-    model.compile(loss='categorical_crossentropy', optimizer='rmsprop', metrics=['accuracy']) 
-
+    model = cnn_model()
     model.summary() #log?
 
     if request.method == 'POST' and request.FILES['test']:
+        if not os.path.exists('static/img/test/'):
+            os.mkdir('static/img/test/')
+
         test = request.FILES['test']
-        _handle_uploaded_file(test, "test.jpg")
+        with open('static/img/test/' + "test.jpg", 'wb+') as destination:
+            for chunk in test.chunks():
+                destination.write(chunk)
         
-        img = image.load_img("./data/test.jpg", target_size=(128, 128))
+        img = image.load_img("./static/img/test/test.jpg", target_size=(128, 128))
         img = image.img_to_array(img)
         img = np.expand_dims(img, axis=0)
         img = img/255
@@ -224,8 +186,12 @@ def predict(request):
 
         guess = np.argmax(model.predict(img), axis=-1)
         out = 'dog' if guess == 1 else 'cat'
-        context = {'what': [out, 'prob cat:', model.predict(img)[0][0], ' prob dog: ', model.predict(img)[0][1]]}
+        context = {
+            'content': out,
+            'prob_cat': model.predict(img)[0][0],
+            'prob_dog': model.predict(img)[0][1],
+        }
     
-        return render(request, 'app/index.html', context)
+        return render(request, 'app/predict.html', context)
 
-    return render(request, 'app/index.html', {'what': 'wrong access'})
+    return render(request, 'app/predict.html', {'content': 'wrong access'})
