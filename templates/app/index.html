@@ -7,7 +7,6 @@
   <table class="table">
     <tr>
       <td>
-
         <form action="/app/upload/" method="POST" enctype="multipart/form-data">
           {% csrf_token %}
           <input type="file" name="files" multiple>
@@ -22,9 +21,11 @@
           <input type="submit" value="Train">
         </form>
       </td>
+    <tr>
       <td>
-        <form action="/app/predict/" method="POST">
+        <form action="/app/predict/" method="POST" enctype="multipart/form-data">
           {% csrf_token %}
+          <input type="file" name="test">
           <input type="submit" value="Predict">
         </form>
       </td>
