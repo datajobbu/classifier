@@ -160,7 +160,11 @@ def train(request):
 
 def predict(request):
     import numpy as np
+    import matplotlib.pyplot as plt
 
+    import lime
+    from lime import lime_image
+    from skimage.segmentation import mark_boundaries
     from keras.preprocessing import image
     from keras.models import load_model
 
@@ -183,6 +187,25 @@ def predict(request):
         img = img/255
 
         model.load_weights('./model/cnn_model.h5')
+
+        """TODO LIME Imple
+        explainer = lime_image.LimeImageExplainer(random_state=42)
+        print(img)
+        print(model.predict)
+        explanation = explainer.explain_instance(
+            img, model.predict
+        )
+
+        image, mask = explanation.get_image_and_mask(
+            model.predict(
+                img
+            ).argmax(aixs=1)[0],
+            positive_only=True,
+            hide_rest=False
+        )
+        plt.imshow(mark_boundaries(image, mask))
+        plt.savefig('./immg.jpg')"""
+        
 
         guess = np.argmax(model.predict(img), axis=-1)
         out = 'dog' if guess == 1 else 'cat'
