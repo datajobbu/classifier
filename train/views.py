@@ -4,6 +4,7 @@ from django.http import HttpResponse
 from django.shortcuts import render, get_object_or_404
 from django.views.decorators.csrf import csrf_protect
 
+from config.settings import STATIC_URL
 from model.cnn import cnn_model
 
 
@@ -15,10 +16,10 @@ def index(request):
 
 def _handle_uploaded_file(file, filename):
     """ save files """
-    if not os.path.exists('static/img/data/'):
-        os.mkdir('static/img/data/')
+    if not os.path.exists(os.path.join(STATIC_URL, 'img/data/')):
+        os.mkdir(os.path.join(STATIC_URL, 'img/data/'))
 
-    with open('static/img/data/' + filename, 'wb+') as destination:
+    with open(os.path.join(STATIC_URL, 'img/data/', filename), 'wb+') as destination:
         for chunk in file.chunks():
             destination.write(chunk)
 
@@ -53,7 +54,7 @@ def train(request):
     IMAGE_SIZE = (IMAGE_WIDTH, IMAGE_HEIGHT)
     IMAGE_CHANNELS = 3
 
-    filenames = os.listdir("./static/img/data/")
+    filenames = os.listdir(os.path.join(STATIC_URL, 'img/data/'))
     print("file num => ", len(filenames))
     print("-"*50)
     categories = []
@@ -103,17 +104,19 @@ def train(request):
                                        )
 
     train_generator = train_datagen.flow_from_dataframe(
-                        train_df, "./static/img/data/", x_col='filename',
-                        y_col='category', target_size=IMAGE_SIZE,
-                        class_mode='categorical', batch_size=batch_size
+                        train_df, os.path.join(STATIC_URL, 'img/data/'),
+                        x_col='filename', y_col='category', 
+                        target_size=IMAGE_SIZE, class_mode='categorical',
+                        batch_size=batch_size
                         )
 
     validation_datagen = ImageDataGenerator(rescale=1./255)
 
     validation_generator = validation_datagen.flow_from_dataframe(
-                        validate_df, "./static/img/data/", x_col='filename',
-                        y_col='category', target_size=IMAGE_SIZE,
-                        class_mode='categorical', batch_size=batch_size
+                        validate_df, os.path.join(STATIC_URL, 'img/data/'),
+                        x_col='filename', y_col='category', 
+                        target_size=IMAGE_SIZE, class_mode='categorical',
+                        batch_size=batch_size
                         )
 
     print("### MODEL TRAIN ###")
