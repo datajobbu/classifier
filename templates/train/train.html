@@ -1,0 +1,37 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container my-3">
+  <h1>
+    {{ what }}
+  </h1>
+  <table class="table">
+    <tr>
+      <td>
+        <form action="/train/upload/" method="POST" enctype="multipart/form-data">
+          {% csrf_token %}
+          <input type="file" name="files" multiple>
+          <input type="submit" value="Upload File">
+        </form>
+      </td>
+    </tr>
+    <!-- TODO
+        choose model:
+        - cnn (available)
+        - ...
+
+        choose hyperparameters
+        - epoch
+        - dropout
+        - ...
+    -->
+    <tr>
+      <td>
+        <form action="/train/train/" method="POST">
+          {% csrf_token %}
+          <input type="submit" value="Train">
+        </form>
+      </td>
+    </tr>
+  </table>
+</div>
+{% endblock %}

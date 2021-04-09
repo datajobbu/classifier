@@ -4,22 +4,17 @@
         <ul class="navbar-nav">
             <li class="nav-item">
                 <a class="nav-link" href="{% url 'app:index' %}">
-                    홈
+                    Home
                 </a>
             </li>
             <li class="navbar-item">
-                <a class="nav-link" href="{% url 'app:upload' %}">
-                    업로드
+                <a class="nav-link" href="{% url 'train:index' %}">
+                    Train
                 </a>
             </li>
             <li class="navbar-item">
-                <a class="nav-link" href="{% url 'app:train' %}">
-                    트레인
-                </a>
-            </li>
-            <li class="navbar-item">
-                <a class="nav-link" href="{% url 'app:predict' %}">
-                    프레딕트
+                <a class="nav-link" href="{% url 'predict:index' %}">
+                    Predict
                 </a>
             </li>
         </ul>

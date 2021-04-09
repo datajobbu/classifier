@@ -19,4 +19,6 @@ from django.urls import path, include
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('app/', include('app.urls')),
+    path('train/', include('train.urls')),
+    path('predict/', include('predict.urls')),
 ]

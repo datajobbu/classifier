@@ -47,6 +47,8 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'app.apps.AppConfig',
+    'train.apps.TrainConfig',
+    'predict.apps.PredictConfig',
 ]
 
 MIDDLEWARE = [

@@ -1,0 +1,23 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container my-3">
+  <h1>
+    {{ what }}
+  </h1>
+  <table class="table">
+    <tr>
+      <td>
+        <p>list</p>
+      </td>
+    </tr>
+    <tr>
+      <td>
+        <a href="/train/">go train</a>
+      </td>
+      <td>
+        <a href="/predict/">go predict</a>
+      </td>
+    </tr>
+  </table>
+</div>
+{% endblock %}
