@@ -71,7 +71,8 @@ def train(request):
     })
 
     model = cnn_model()
-    model.summary()
+    result = []
+    summary = model.summary(print_fn=lambda x: result.append(x))
 
     print("### MODEL READY ###")
     earlystop = EarlyStopping(patience=10)
@@ -122,9 +123,15 @@ def train(request):
                         validation_steps=total_validate//batch_size,
                         steps_per_epoch=total_train//batch_size, callbacks=callbacks
                         )
-
+    
+    result.append(history.history['loss'][-1])
+    result.append(history.history['accuracy'][-1])
     print("### MODEL SAVE ###")
     model.save_weights("model/cnn_model.h5")
     
-    context = {"what": "Train Finished! Ready To Predict."}
+    context = {
+                "what": "Train Finished! Ready To Predict.",
+                "result": result,
+              }
+
     return render(request, 'train/train.html', context)

@@ -32,6 +32,13 @@
         </form>
       </td>
     </tr>
+    <tr>
+      <td>
+        {% if result %}
+          <p>{{ result }}</p>
+        {% endif %}
+      </td>
+    </tr>
   </table>
 </div>
 {% endblock %}

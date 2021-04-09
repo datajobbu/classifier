@@ -1,19 +1,26 @@
 {% extends 'base.html' %}
 {% block content %}
+{% load static %}
+
 <div class="container my-3">
   <h1>
     {{ what }}
   </h1>
+  <div id="main">
+    <img src="{% static 'img/main.jpg' %}" width="50%" text-align="center">
+    <style>
+      #main {
+        text-align: center;
+      }
+    </style>
+  </div>
   <table class="table">
     <tr>
       <td>
-        <p>list</p>
+        <a href="/train/" >go train</a>
       </td>
     </tr>
     <tr>
-      <td>
-        <a href="/train/">go train</a>
-      </td>
       <td>
         <a href="/predict/">go predict</a>
       </td>
