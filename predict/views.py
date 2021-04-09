@@ -1,8 +1,9 @@
 import os
 
-from model.cnn import cnn_model
-
 from django.shortcuts import render, get_object_or_404
+
+from model.cnn import cnn_model
+from config.settings import STATIC_URL
 
 
 def index(request):
@@ -24,18 +25,19 @@ def predict(request):
     model.summary()
 
     if request.method == 'POST' and request.FILES['test']:
-        if not os.path.exists('static/img/test/'):
-            os.mkdir('static/img/test/')
+        if not os.path.exists(os.path.join(STATIC_URL, 'img/test/')):
+            os.mkdir(os.path.join(STATIC_URL, 'img/test/'))
 
         test = request.FILES['test']
-        with open('static/img/test/' + "test.jpg", 'wb+') as destination:
+        with open(os.path.join(STATIC_URL, 'img/test/', 'test.jpg'), 'wb+') as destination:
             for chunk in test.chunks():
                 destination.write(chunk)
     
-        img = image.load_img("./static/img/test/test.jpg", target_size=(128, 128))
+        img = image.load_img(os.path.join(STATIC_URL, 'img/test/', 'test.jpg'),
+                             target_size=(128, 128))
         img = image.img_to_array(img)
         img = np.expand_dims(img, axis=0)
-        o_img = img/255
+        o_img = img / 255
 
         model.load_weights('./model/cnn_model.h5')
         guess = np.argmax(model.predict(o_img), axis=-1)
