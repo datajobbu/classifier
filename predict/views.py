@@ -12,6 +12,10 @@ def index(request):
     return render(request, 'predict/predict.html', context)
 
 
+def _predict(image):
+    return session.run(model_predict,
+                       feed_dict={preprocessed_image: image})
+
 def predict(request):
     import numpy as np
     import matplotlib.pyplot as plt
@@ -19,6 +23,8 @@ def predict(request):
     from skimage.segmentation import mark_boundaries
     from keras.preprocessing import image
     from keras.models import load_model
+    from lime.lime_image import LimeImageExplainer
+    from lime.wrappers.scikit_image import SegmentationAlgorithm
 
 
     model = cnn_model()
@@ -39,14 +45,47 @@ def predict(request):
         img = np.expand_dims(img, axis=0)
         o_img = img / 255
 
+        t_img = o_img[0]
+        t_img = t_img.astype('double')
+
         model.load_weights('./model/cnn_model.h5')
         guess = np.argmax(model.predict(o_img), axis=-1)
+
+        # ----- Explainer ----- #
+        lime_explainer = LimeImageExplainer()
+
+        segmenter = SegmentationAlgorithm(
+            'slic',
+            n_segments=100,
+            compactness=1,
+            sigma=1
+        )
+
+        explanation = lime_explainer.explain_instance(
+            t_img,
+            model.predict,
+            segmentation_fn=segmenter
+        )
+        
+        temp, mask = explanation.get_image_and_mask(
+            model.predict(o_img).argmax(axis=1)[0],
+            positive_only=True,
+            hide_rest=False
+        )
+        fig = plt.figure()
+        plt.imshow(mark_boundaries(temp, mask))
+        plt.axis('off')
+        plt.savefig(os.path.join(STATIC_URL, 'img/test/', 'lime.jpg'),)
+        plt.close(fig)
+        # ----- ----- ----- ----- #
+
         out = 'dog' if guess == 1 else 'cat'
         context = {
             'content': out,
             'prob_cat': model.predict(o_img)[0][0],
             'prob_dog': model.predict(o_img)[0][1],
         }
+
         return render(request, 'predict/predict.html', context)
 
     return render(request, 'predict/predict.html', {'content': 'wrong access'})
