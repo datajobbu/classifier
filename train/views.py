@@ -55,7 +55,7 @@ def train(request):
     IMAGE_CHANNELS = 3
 
     filenames = os.listdir(os.path.join(STATIC_URL, 'img/data/'))
-    print("file num => ", len(filenames))
+    print("file num => ", len(filenames))     #TODO: logging
     print("-"*50)
     categories = []
     for filename in filenames:
@@ -82,7 +82,7 @@ def train(request):
                                                 patience=2, 
                                                 verbose=1, 
                                                 factor=0.5, 
-                                                min_lr=0.0001)
+                                                min_lr=0.001)
 
     callbacks = [earlystop, learning_rate_reduction]
 
@@ -95,37 +95,46 @@ def train(request):
 
     total_train = train_df.shape[0]
     total_validate = validate_df.shape[0]
-    batch_size=15
+    batch_size= 50
 
-    train_datagen = ImageDataGenerator(rotation_range=15, rescale=1./255,
-                                       shear_range=0.1, zoom_range=0.2,
-                                       horizontal_flip=True, width_shift_range=0.1,
-                                       height_shift_range=0.1
-                                       )
-
+    train_datagen = ImageDataGenerator(
+                            rotation_range=15,
+                            rescale=1./255,
+                            shear_range=0.1,
+                            zoom_range=0.2,
+                            horizontal_flip=True,
+                            width_shift_range=0.1,
+                            height_shift_range=0.1
+                    )
     train_generator = train_datagen.flow_from_dataframe(
-                        train_df, os.path.join(STATIC_URL, 'img/data/'),
-                        x_col='filename', y_col='category', 
-                        target_size=IMAGE_SIZE, class_mode='categorical',
-                        batch_size=batch_size
-                        )
-
+                            train_df, 
+                            os.path.join(STATIC_URL, 'img/data/'),
+                            x_col='filename',
+                            y_col='category', 
+                            target_size=IMAGE_SIZE,
+                            class_mode='categorical',
+                            batch_size=batch_size
+                      )
     validation_datagen = ImageDataGenerator(rescale=1./255)
 
     validation_generator = validation_datagen.flow_from_dataframe(
-                        validate_df, os.path.join(STATIC_URL, 'img/data/'),
-                        x_col='filename', y_col='category', 
-                        target_size=IMAGE_SIZE, class_mode='categorical',
-                        batch_size=batch_size
-                        )
+                            validate_df,
+                            os.path.join(STATIC_URL, 'img/data/'),
+                            x_col='filename',
+                            y_col='category', 
+                            target_size=IMAGE_SIZE,
+                            class_mode='categorical',
+                            batch_size=batch_size
+                           )
 
     print("### MODEL TRAIN ###")
     epochs = 3 if FAST_RUN else 100
-    history = model.fit(train_generator, epochs=epochs,
+    history = model.fit(train_generator,
+                        epochs=epochs,
                         validation_data=validation_generator,
                         validation_steps=total_validate//batch_size,
-                        steps_per_epoch=total_train//batch_size, callbacks=callbacks
-                        )
+                        steps_per_epoch=total_train//batch_size,
+                        callbacks=callbacks)
     
     result.append(history.history['loss'][-1])
     result.append(history.history['accuracy'][-1])
